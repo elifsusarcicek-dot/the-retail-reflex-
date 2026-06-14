@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Retail Reflex — Lesson Console</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500&family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #f5f3ee;
+  --surface: #ffffff;
+  --surf2:   #f9f7f3;
+  --surf3:   #f0ede7;
+  --border:  #e0dbd3;
+  --border2: #ccc7be;
+  --text:    #1c1a17;
+  --muted:   #8a8278;
+  --accent:  #b86a00;
+  --a2:      #c2400c;
+  --blue:    #1850b8;
+  --green:   #166534;
+  --red:     #b91c1c;
+  --yellow:  #92400e;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:52px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.brand{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--accent)}
+.stage-nav{display:flex;gap:2px;background:var(--surf3);border:1px solid var(--border);border-radius:8px;padding:3px}
+.snav-btn{padding:6px 13px;border-radius:5px;border:none;background:transparent;color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.snav-btn:hover{background:var(--surface);color:var(--text)}
+.snav-btn.active{background:var(--accent);color:#fff;font-weight:500}
+.timer-row{display:flex;align-items:center;gap:8px}
+.t-disp{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--text);letter-spacing:2px;min-width:64px;text-align:center}
+.t-disp.warn{color:var(--red)}
+.t-btn{width:28px;height:28px;border:1px solid var(--border2);background:var(--surf2);color:var(--text);border-radius:6px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;transition:background .1s}
+.t-btn:hover{background:var(--surf3)}
+
+/* ── STAGE ── */
+.stage{display:none;padding:28px;min-height:calc(100vh - 52px)}
+.stage.active{display:block;animation:fi .2s ease}
+@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.sh{margin-bottom:26px}
+.sh-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:.5px;color:var(--text)}
+.sh-sub{font-size:13px;color:var(--muted);margin-top:3px}
+
+/* ── STAGE 1: AD FEEDS ── */
+.feeds-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:16px}
+.feeds-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1060px;margin:0 auto}
+.feed-phone{background:#fff;border-radius:16px;overflow:hidden;border:1px solid var(--border);box-shadow:0 2px 16px rgba(0,0,0,.08)}
+.feed-app-bar{background:#fafafa;border-bottom:1px solid #efefef;padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
+.fab-logo{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px}
+.fab-icons{font-size:16px;display:flex;gap:12px;color:#555}
+.feed-post{border-bottom:1px solid #efefef}
+.fp-header{display:flex;align-items:center;gap:10px;padding:10px 14px}
+.fp-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0}
+.fp-meta{flex:1}
+.fp-name{font-size:13px;font-weight:600;color:#111;line-height:1.2}
+.fp-sponsored{font-size:10px;color:#888;display:flex;align-items:center;gap:4px}
+.fp-sponsored::before{content:'·';margin-right:2px}
+.fp-img{width:100%;aspect-ratio:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.fp-footer{padding:10px 14px}
+.fp-actions{display:flex;gap:16px;margin-bottom:8px;font-size:18px;color:#333}
+.fp-likes{font-size:12px;font-weight:600;color:#111;margin-bottom:4px}
+.fp-caption{font-size:12px;color:#333;line-height:1.5}
+.fp-caption strong{font-weight:600;color:#111}
+.fp-tag{display:inline-block;margin-top:5px;font-size:11px;color:#00376b;font-weight:500}
+.fp-cta{display:block;margin-top:8px;background:#0095f6;color:#fff;text-align:center;padding:7px;border-radius:6px;font-size:12px;font-weight:600;cursor:default}
+
+/* FEED A — tech */
+.feed-a .fab-logo{color:#1850b8}
+.feed-a .fp-avatar{background:#e8effc;color:#1850b8}
+.feed-a .fp-img{background:linear-gradient(135deg,#0f1c3a 0%,#1d3461 100%)}
+
+/* FEED B — fast fashion */
+.feed-b .fab-logo{color:#c2400c}
+.feed-b .fp-avatar{background:#fdeadf;color:#c2400c}
+.feed-b .fp-img{background:linear-gradient(135deg,#ff4e00 0%,#ec9f05 100%)}
+
+/* FEED C — aesthetic */
+.feed-c .fab-logo{color:#5c4a3a}
+.feed-c .fp-avatar{background:#f5ede4;color:#5c4a3a}
+.feed-c .fp-img{background:linear-gradient(135deg,#e8e0d5 0%,#d4c5b2 100%)}
+
+/* VR headset illustration */
+.vr-illus{position:relative;width:180px;height:90px}
+.vr-body{width:180px;height:90px;background:#223;border-radius:18px;position:absolute;top:0;left:0}
+.vr-visor{width:150px;height:55px;background:#1850b8;border-radius:12px;position:absolute;top:17px;left:15px;display:flex;align-items:center;justify-content:center;gap:10px}
+.vr-lens{width:50px;height:40px;background:#0d1f5c;border-radius:50%;border:2px solid #3b7cf4}
+.vr-strap-l,.vr-strap-r{position:absolute;top:28px;width:20px;height:12px;background:#334;border-radius:3px}
+.vr-strap-l{left:-16px}.vr-strap-r{right:-16px}
+.vr-price-tag{position:absolute;bottom:10px;right:10px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#fff}
+
+/* Flash sale illustration */
+.flash-illus{text-align:center;padding:10px 20px;width:100%}
+.flash-pct{font-family:'Bebas Neue',sans-serif;font-size:80px;color:#fff;line-height:.95;letter-spacing:-2px;text-shadow:0 2px 12px rgba(0,0,0,.3)}
+.flash-off{font-family:'Bebas Neue',sans-serif;font-size:26px;color:rgba(255,255,255,.85);letter-spacing:4px}
+.flash-timer{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px}
+.ft-block{background:rgba(0,0,0,.3);border-radius:5px;padding:4px 8px;font-family:'DM Mono',monospace;font-size:14px;font-weight:500;color:#fff;min-width:34px;text-align:center}
+.ft-sep{color:rgba(255,255,255,.6);font-weight:700;font-size:14px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.ft-sep{animation:blink 1s infinite}
+
+/* aesthetic illustration */
+.aes-illus{position:relative;width:160px;height:160px}
+.aes-shelf{position:absolute;bottom:20px;left:10px;width:140px;height:8px;background:#b8a898;border-radius:2px}
+.aes-vase{position:absolute;bottom:28px;left:55px;width:24px;height:40px;background:#c4a882;border-radius:12px 12px 8px 8px}
+.aes-stem{position:absolute;bottom:66px;left:66px;width:2px;height:30px;background:#8a7060}
+.aes-leaf1{position:absolute;bottom:86px;left:54px;width:18px;height:10px;background:#a8b898;border-radius:50% 0;transform:rotate(-20deg)}
+.aes-leaf2{position:absolute;bottom:90px;left:68px;width:18px;height:10px;background:#b8c8a8;border-radius:0 50%;transform:rotate(15deg)}
+.aes-frame{position:absolute;top:10px;right:10px;width:48px;height:56px;border:2px solid #c4a882;border-radius:2px;background:#ede0d0;display:flex;align-items:center;justify-content:center}
+.aes-frame-inner{width:30px;height:36px;background:#d4b898;border-radius:1px}
+.aes-book{position:absolute;bottom:28px;left:20px;width:28px;height:18px;background:#e8d8c8;border-radius:1px;border:1px solid #c8b8a8}
+.aes-badge{position:absolute;top:8px;left:8px;background:rgba(92,74,58,.9);color:#f5ede4;font-size:9px;font-weight:600;padding:3px 8px;border-radius:3px;letter-spacing:.5px;text-transform:uppercase}
+
+/* ── STAGE 2: BLOG ── */
+.blog-outer{background:var(--surf3);border:1px solid var(--border);border-radius:10px;overflow:hidden;max-width:900px;margin:0 auto}
+.brow{background:var(--surf2);padding:9px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.bdots{display:flex;gap:5px}
+.bdots span{width:10px;height:10px;border-radius:50%}
+.d-r{background:#ff5f56}.d-y{background:#febc2e}.d-g{background:#28c840}
+.burl{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:4px 10px;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)}
+.blog-layout{display:grid;grid-template-columns:1fr 250px;background:var(--surface)}
+.blog-main{padding:30px 28px;border-right:1px solid var(--border)}
+.b-pub{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;color:var(--accent);margin-bottom:7px}
+.b-head{font-family:'Playfair Display',serif;font-size:38px;line-height:1.1;margin-bottom:10px;color:var(--text)}
+.b-byline{color:var(--muted);font-size:11px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--border);padding-bottom:14px;margin-bottom:18px}
+.b-byline strong{color:var(--text)}
+.b-body{font-size:15px;line-height:1.85;color:#3a3630}
+.b-body p{margin-bottom:15px}
+
+.hl-r{background:rgba(24,80,184,.1);border-bottom:2.5px solid var(--blue);border-radius:2px;padding:1px 3px;font-weight:700;color:#1850b8}
+.hl-h{background:rgba(184,106,0,.12);border-bottom:2.5px solid var(--accent);border-radius:2px;padding:1px 3px;font-weight:700;color:var(--accent)}
+.hl-g{background:rgba(194,64,12,.1);border-bottom:2.5px solid var(--a2);border-radius:2px;padding:1px 3px;font-weight:700;color:var(--a2)}
+.hl-fomo{font-weight:700;color:var(--text)}
+
+.noticing-leg{display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+.nl-it{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text)}
+.nl-bar{width:16px;height:3px;border-radius:2px}
+
+.sidebar{padding:22px 18px;background:var(--surf2)}
+.sb-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:7px}
+.sb-item{border-bottom:1px solid var(--border);padding:10px 0}
+.sb-tag{font-family:'DM Mono',monospace;font-size:9px;color:var(--a2);margin-bottom:3px}
+.sb-title{font-size:12px;line-height:1.4;color:var(--text);font-weight:500}
+
+/* ── STAGE 3: MEMO ── */
+.memo-outer{max-width:740px;margin:0 auto}
+.memo-shell{background:#f5f0e4;border-radius:6px;overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,.12);border:1px solid #d8d0c0}
+.memo-stamp-bar{background:#2a1800;padding:9px 22px;display:flex;align-items:center;gap:14px;border-bottom:2px solid #b06000}
+.stamp{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:4px;color:#f0a500;border:2px solid #f0a500;padding:2px 10px;border-radius:3px}
+.stamp-id{font-family:'DM Mono',monospace;font-size:10px;color:#8a7040;line-height:1.6}
+.memo-hdr{background:#ede5d0;border-bottom:1px solid #c8b898;padding:14px 24px}
+.mhg{display:grid;grid-template-columns:72px 1fr;gap:3px 10px}
+.mhk{font-family:'DM Mono',monospace;font-size:10px;color:#8a7040;font-weight:500}
+.mhv{font-family:'DM Mono',monospace;font-size:10px;color:#2a1800}
+.memo-body{padding:24px 28px 18px;color:#1a1400;font-size:14.5px;line-height:2.0}
+.memo-body p{margin-bottom:10px}
+.g-num{font-family:'Bebas Neue',sans-serif;font-size:13px;color:#b06000;vertical-align:middle}
+.g-inp{display:inline;background:#fffdf5;border:1.5px solid #c8a050;border-radius:3px;padding:2px 10px;font-family:'DM Mono',monospace;font-size:12px;color:#2a1800;min-width:200px;outline:none;transition:border-color .15s;vertical-align:middle}
+.g-inp:focus{border-color:#b06000}
+.g-inp.ok{border-color:#166534;background:#f0fff4;color:#166534}
+.g-inp.no{border-color:#b91c1c;background:#fff5f5;color:#b91c1c}
+.g-hint{font-family:'DM Mono',monospace;font-size:10px;color:#9a8050;vertical-align:middle;margin-left:4px}
+.memo-foot{background:#ede5d0;border-top:1px solid #c8b898;padding:12px 24px;display:flex;gap:10px}
+.check-btn{padding:7px 18px;background:#2a1800;border:none;border-radius:5px;color:#f0a500;font-weight:600;font-size:11px;cursor:pointer;font-family:'DM Mono',monospace;transition:opacity .15s}
+.check-btn:hover{opacity:.8}
+.key-btn{padding:7px 18px;background:transparent;border:1px solid #c8a050;border-radius:5px;color:#8a6a2a;font-size:11px;cursor:pointer;font-family:'DM Mono',monospace;transition:background .15s}
+.key-btn:hover{background:#ddd5c0}
+.ak{max-width:740px;margin:16px auto 0;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px 20px;display:none}
+.ak.show{display:block}
+.ak-h{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--green);margin-bottom:12px}
+.ak-row{display:flex;gap:8px;margin-bottom:5px;font-size:12px;align-items:flex-start}
+.ak-n{font-family:'Bebas Neue',sans-serif;color:var(--accent);font-size:15px;min-width:18px}
+.ak-t{font-family:'DM Mono',monospace;color:var(--green);line-height:1.5}
+
+/* ── STAGE 4: ETHICS PANEL ── */
+.panel-grid{display:grid;grid-template-columns:300px 1fr;gap:24px;max-width:960px;margin:0 auto}
+.scenario-box{max-width:960px;margin:0 auto 14px;background:var(--surface);border:1.5px solid var(--a2);border-radius:10px;padding:22px 28px}
+.scenario-box .case-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;color:var(--a2);text-transform:uppercase;margin-bottom:8px}
+.scenario-box .case-title{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:.5px;color:var(--text);line-height:1.1;margin-bottom:10px}
+.scenario-box .case-body{font-size:14px;color:var(--text);line-height:1.65;font-weight:400}
+.scenario-box .case-body strong{color:var(--red);font-weight:600}
+
+.task-box{max-width:960px;margin:0 auto 20px;background:var(--surf2);border:1px solid var(--border);border-radius:8px;padding:14px 28px;display:flex;align-items:flex-start;gap:14px}
+.task-icon{font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:var(--accent);background:rgba(184,106,0,.1);border:1px solid rgba(184,106,0,.3);border-radius:4px;padding:3px 9px;white-space:nowrap;margin-top:1px}
+.task-text{font-size:13.5px;color:var(--text);line-height:1.6}
+.task-text em{font-style:normal;font-family:'DM Mono',monospace;font-size:12px;color:var(--accent);display:inline-block;margin-top:5px}
+
+/* wheel */
+.wheel-col{display:flex;flex-direction:column;align-items:center;gap:14px}
+.wheel-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase}
+.wheel-wrap{position:relative;width:260px;height:260px}
+.w-ptr{position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-top:20px solid var(--accent);z-index:10}
+#wc{display:block;border-radius:50%;cursor:pointer;box-shadow:0 0 0 4px var(--surf3),0 0 0 5px var(--border)}
+#wc:hover{filter:brightness(.97)}
+.spin-btn{padding:9px 28px;background:var(--accent);border:none;border-radius:7px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;cursor:pointer;transition:opacity .15s,transform .1s}
+.spin-btn:hover{opacity:.88}
+.spin-btn:active{transform:scale(.97)}
+.spin-btn:disabled{opacity:.35;cursor:default}
+
+/* role card */
+.role-card-area{min-height:220px;width:100%}
+.role-card-inner{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;animation:fi .3s ease;display:none}
+.role-card-inner.visible{display:block}
+.rc-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
+.rc-name{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:.5px;margin-bottom:12px}
+.rc-row{margin-bottom:10px}
+.rc-key{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px}
+.rc-val{font-size:12.5px;line-height:1.55;color:#4a4540}
+.rc-tag{display:inline-block;border:1px solid var(--border);border-radius:4px;padding:3px 9px;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-top:3px;background:var(--surf2)}
+
+/* right panel */
+.jury-panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:22px}
+.jp-title{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:.5px;color:var(--text);border-bottom:1px solid var(--border);padding-bottom:10px;margin-bottom:16px}
+
+/* speaker selector */
+.spk-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
+.spk-row{display:flex;gap:6px;margin-bottom:18px}
+.spk-btn{padding:6px 12px;border:1px solid var(--border);border-radius:6px;background:var(--surf2);color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;transition:all .15s}
+.spk-btn:hover{border-color:var(--border2);color:var(--text)}
+.spk-btn.sel{background:var(--text);color:var(--surface);border-color:var(--text)}
+
+.criterion{margin-bottom:16px}
+.cr-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px;color:var(--accent)}
+.cr-q{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:7px}
+.sc-dots{display:flex;gap:5px}
+.dot{width:22px;height:22px;border:1.5px solid var(--border2);border-radius:50%;cursor:pointer;transition:all .1s;background:transparent}
+.dot:hover{border-color:var(--accent)}
+.dot.lit{background:var(--accent);border-color:var(--accent)}
+
+.verdict-zone{padding-top:14px;border-top:1px solid var(--border);margin-top:4px}
+.v-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
+.score-totals{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.stotal{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surf2);border:1px solid var(--border);border-radius:6px}
+.st-name{font-size:12px;font-weight:600;flex:1}
+.st-score{font-family:'Bebas Neue',sans-serif;font-size:22px;line-height:1}
+.st-max{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)}
+.verdict-calc-btn{width:100%;padding:9px;background:var(--text);border:none;border-radius:6px;color:var(--surface);font-family:'DM Mono',monospace;font-size:11px;font-weight:500;cursor:pointer;transition:opacity .15s;letter-spacing:.5px}
+.verdict-calc-btn:hover{opacity:.85}
+.v-ban{flex:1;padding:9px;background:rgba(185,28,28,.07);border:1px solid rgba(185,28,28,.35);color:var(--red);border-radius:6px;cursor:pointer;font-family:'DM Mono',monospace;font-size:11px;transition:all .15s}
+.v-ban:hover,.v-ban.sel{background:rgba(185,28,28,.15);border-color:var(--red)}
+.v-exp{flex:1;padding:9px;background:rgba(22,101,52,.07);border:1px solid rgba(22,101,52,.35);color:var(--green);border-radius:6px;cursor:pointer;font-family:'DM Mono',monospace;font-size:11px;transition:all .15s}
+.v-exp:hover,.v-exp.sel{background:rgba(22,101,52,.15);border-color:var(--green)}
+
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">THE RETAIL REFLEX</div>
+  <div class="stage-nav">
+    <button class="snav-btn active" onclick="goStage(0)">Consumer Behaviour</button>
+    <button class="snav-btn" onclick="goStage(1)">The Consumer Manifesto</button>
+    <button class="snav-btn" onclick="goStage(2)">Project Glow-Up</button>
+    <button class="snav-btn" onclick="goStage(3)">Ethics Panel</button>
+  </div>
+  <div class="timer-row">
+    <button class="t-btn" onclick="resetTimer()">↺</button>
+    <div class="t-disp" id="tDisp">05:00</div>
+    <button class="t-btn" onclick="toggleTimer()" id="tBtn">▶</button>
+  </div>
+</div>
+
+<!-- ══════════════════════ STAGE 1 ══════════════════════ -->
+<div class="stage active" id="stage-0">
+  <div class="sh"><div class="sh-title">The Digital Ad Feed</div></div>
+  <div class="feeds-label">// Suggested for You</div>
+
+  <div class="feeds-grid">
+
+    <!-- FEED A: TECH ENTHUSIAST -->
+    <div class="feed-phone feed-a">
+      <div class="feed-app-bar">
+        <div class="fab-logo">NOVAFEED</div>
+        <div class="fab-icons"><span>♡</span><span>✈</span></div>
+      </div>
+      <div class="feed-post">
+        <div class="fp-header">
+          <div class="fp-avatar" style="background:#e8effc;color:#1850b8">NT</div>
+          <div class="fp-meta">
+            <div class="fp-name">NovaTech Store</div>
+            <div class="fp-sponsored">Sponsored · Electronics</div>
+          </div>
+          <div style="color:#888;font-size:18px">···</div>
+        </div>
+        <div class="fp-img">
+          <div class="vr-illus">
+            <div class="vr-body">
+              <div class="vr-visor">
+                <div class="vr-lens"></div>
+                <div class="vr-lens"></div>
+              </div>
+              <div class="vr-strap-l"></div>
+              <div class="vr-strap-r"></div>
+            </div>
+            <div class="vr-price-tag">from €649</div>
+          </div>
+        </div>
+        <div class="fp-footer">
+          <div class="fp-actions"><span>♡</span><span>💬</span><span>↗</span></div>
+          <div class="fp-likes">12,483 likes</div>
+          <div class="fp-caption"><strong>NovaTech Store</strong> The future is now. NovaSphere Pro — next-gen VR for the next generation. <span class="fp-tag">#TechLife #MustHave</span></div>
+          <div class="fp-cta">Shop Now</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FEED B: FAST FASHION -->
+    <div class="feed-phone feed-b">
+      <div class="feed-app-bar">
+        <div class="fab-logo">NOVAFEED</div>
+        <div class="fab-icons"><span>♡</span><span>✈</span></div>
+      </div>
+      <div class="feed-post">
+        <div class="fp-header">
+          <div class="fp-avatar" style="background:#fdeadf;color:#c2400c">FW</div>
+          <div class="fp-meta">
+            <div class="fp-name">FLASHWEAR</div>
+            <div class="fp-sponsored">Sponsored · Fashion</div>
+          </div>
+          <div style="color:#888;font-size:18px">···</div>
+        </div>
+        <div class="fp-img">
+          <div class="flash-illus">
+            <div class="flash-pct">70%</div>
+            <div class="flash-off">OFF</div>
+            <div class="flash-timer">
+              <div class="ft-block" id="fh">01</div>
+              <div class="ft-sep">:</div>
+              <div class="ft-block" id="fm">47</div>
+              <div class="ft-sep">:</div>
+              <div class="ft-block" id="fs">23</div>
+            </div>
+          </div>
+        </div>
+        <div class="fp-footer">
+          <div class="fp-actions"><span>♡</span><span>💬</span><span>↗</span></div>
+          <div class="fp-likes">8,201 likes</div>
+          <div class="fp-caption"><strong>FLASHWEAR</strong> ⚡ TODAY ONLY ⚡ New arrivals every 10 minutes. Don't miss out — others are watching this item right now. <span class="fp-tag">#FlashSale #OOTD</span></div>
+          <div class="fp-cta" style="background:#c2400c">Grab It Now</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FEED C: AESTHETIC INFLUENCER -->
+    <div class="feed-phone feed-c">
+      <div class="feed-app-bar">
+        <div class="fab-logo" style="color:#5c4a3a">NOVAFEED</div>
+        <div class="fab-icons"><span>♡</span><span>✈</span></div>
+      </div>
+      <div class="feed-post">
+        <div class="fp-header">
+          <div class="fp-avatar" style="background:#f5ede4;color:#5c4a3a">MB</div>
+          <div class="fp-meta">
+            <div class="fp-name">Maison Blanc</div>
+            <div class="fp-sponsored">Sponsored · Lifestyle</div>
+          </div>
+          <div style="color:#888;font-size:18px">···</div>
+        </div>
+        <div class="fp-img" style="background:linear-gradient(135deg,#ede8e0 0%,#d8cfc4 100%)">
+          <div class="aes-illus">
+            <div class="aes-badge">Members Only</div>
+            <div class="aes-frame"><div class="aes-frame-inner"></div></div>
+            <div class="aes-book"></div>
+            <div class="aes-shelf"></div>
+            <div class="aes-vase"></div>
+            <div class="aes-stem"></div>
+            <div class="aes-leaf1"></div>
+            <div class="aes-leaf2"></div>
+          </div>
+        </div>
+        <div class="fp-footer">
+          <div class="fp-actions"><span>♡</span><span>💬</span><span>↗</span></div>
+          <div class="fp-likes">5,914 likes</div>
+          <div class="fp-caption"><strong>Maison Blanc</strong> You've been selected for early access to our Autumn Collection. Curated for those who understand quality. <span class="fp-tag">#SlowLiving #AestheticHome</span></div>
+          <div class="fp-cta" style="background:#5c4a3a">Claim Your Access</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════ STAGE 2 ══════════════════════ -->
+<div class="stage" id="stage-1">
+  <div class="sh"><div class="sh-title">The Consumer Manifesto</div></div>
+
+  <div class="noticing-leg">
+    <div class="nl-it"><div class="nl-bar" style="background:var(--blue)"></div>Reporting Passive</div>
+    <div class="nl-it"><div class="nl-bar" style="background:var(--accent)"></div>Causative: have</div>
+    <div class="nl-it"><div class="nl-bar" style="background:var(--a2)"></div>Causative: get</div>
+  </div>
+
+  <div class="blog-outer">
+    <div class="brow">
+      <div class="bdots"><span class="d-r"></span><span class="d-y"></span><span class="d-g"></span></div>
+      <div class="burl">theretailreflex.com/opinion/why-you-bought-that</div>
+    </div>
+    <div class="blog-layout">
+      <div class="blog-main">
+        <div class="b-pub">THE RETAIL REFLEX &nbsp;·&nbsp; DIGITAL INDUSTRY INSIGHTS</div>
+        <div class="b-head">Why You Bought That</div>
+        <div class="b-byline"><strong>Julian Thorne</strong> &nbsp;·&nbsp; Lead Consumer Behaviour Analyst &nbsp;·&nbsp; 12 April 2026</div>
+        <div class="b-body">
+          <p>In the modern boardroom, <span class="hl-r">it is thought that</span> brand loyalty is no longer built — it is engineered. As a behaviour analyst, I observe how e-commerce giants <span class="hl-h">have their algorithms map</span> the subconscious of every teenager.</p>
+          <p>While <span class="hl-r">it is often claimed that</span> these apps empower the consumer, the reality is more strategic. By using hyper-personalised notifications, companies <span class="hl-g">get the user to feel</span> a sense of <span class="hl-fomo">'FOMO'</span>.</p>
+          <p>Ultimately, <span class="hl-r">it is considered</span> a success when a strategic CEO <span class="hl-h">has the media define</span> what 'essential' means, leaving the idealistic teenager to foot the bill.</p>
+        </div>
+      </div>
+      <div class="sidebar">
+        <div class="sb-lbl">Trending Now</div>
+        <div class="sb-item">
+          <div class="sb-tag">DARK PATTERNS</div>
+          <div class="sb-title">"Dark Patterns: How UX gets you to stay on the page."</div>
+        </div>
+        <div class="sb-item">
+          <div class="sb-tag">OPINION</div>
+          <div class="sb-title">"Why 10th-grade spending habits are believed to predict the next recession."</div>
+        </div>
+        <div class="sb-item">
+          <div class="sb-tag">CASE STUDY</div>
+          <div class="sb-title">"How the 'Buy Now, Pay Later' trend has the youth spend their future."</div>
+        </div>
+        <div class="sb-item">
+          <div class="sb-tag">DATA</div>
+          <div class="sb-title">"It is reported that Gen Z spends 3.7 hrs/day on shopping apps."</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ STAGE 3 ══════════════════════ -->
+<div class="stage" id="stage-2">
+  <div class="sh"><div class="sh-title">Project Glow-Up</div></div>
+  <div class="memo-outer">
+    <div class="memo-shell">
+      <div class="memo-stamp-bar">
+        <div class="stamp">CLASSIFIED</div>
+        <div class="stamp-id">PROJECT GLOW-UP &nbsp;·&nbsp; Algorithm Update #402 &nbsp;·&nbsp; INTERNAL USE ONLY<br>Distribution: C-Suite Only &nbsp;·&nbsp; Do Not Forward</div>
+      </div>
+      <div class="memo-hdr">
+        <div class="mhg">
+          <div class="mhk">TO:</div><div class="mhv">Strategic CEO, Glow-Shop Inc.</div>
+          <div class="mhk">FROM:</div><div class="mhv">Lead Developer, Platform Intelligence</div>
+          <div class="mhk">SUBJECT:</div><div class="mhv">Algorithm Update #402 — Flash Sale Optimisation</div>
+          <div class="mhk">DATE:</div><div class="mhv">09 April 2026 &nbsp;·&nbsp; CONFIDENTIAL</div>
+        </div>
+      </div>
+      <div class="memo-body">
+        <p>Recent data confirms that our 'Flash Sale' feature is performing above projections.</p>
+        <p>
+          <span class="g-num">(1)</span>
+          It&nbsp;<input class="g-inp" id="g1" placeholder="_______________">&nbsp;<span class="g-hint">(claim)</span>
+          that 80% of our teenage users are now addicted to the app.
+        </p>
+        <p>
+          To increase profits, we&nbsp;<span class="g-num">(2)</span>
+          <input class="g-inp" id="g2" placeholder="_______________">&nbsp;<span class="g-hint">(have / our developers / remove)</span>
+          the 'cancel order' button from the home screen.
+        </p>
+        <p>
+          Although public sentiment is negative, we&nbsp;<span class="g-num">(3)</span>
+          <input class="g-inp" id="g3" placeholder="_______________">&nbsp;<span class="g-hint">(get / the influencers / promote)</span>
+          our debt-repayment plan as a 'lifestyle choice'.
+        </p>
+        <p>
+          <span class="g-num">(4)</span>
+          It&nbsp;<input class="g-inp" id="g4" placeholder="_______________">&nbsp;<span class="g-hint">(think)</span>
+          that this strategy will&nbsp;<span class="g-num">(5)</span>
+          <input class="g-inp" id="g5" placeholder="_______________">&nbsp;<span class="g-hint">(have / the market / forget)</span>
+          our ethical record entirely.
+        </p>
+        <p>
+          The central question remains: how can we&nbsp;<span class="g-num">(6)</span>
+          <input class="g-inp" id="g6" placeholder="_______________">&nbsp;<span class="g-hint">(get / the consumers / believe)</span>
+          that we are genuinely on their side?
+        </p>
+      </div>
+      <div class="memo-foot">
+        <button class="check-btn" onclick="checkAns()">✓ CHECK ANSWERS</button>
+        <button class="key-btn" onclick="showKey()">SHOW ANSWER KEY</button>
+      </div>
+    </div>
+    <div class="ak" id="ak">
+      <div class="ak-h">// ANSWER KEY</div>
+      <div class="ak-row"><div class="ak-n">1</div><div class="ak-t">It <strong>is claimed</strong> that 80% of our teenage users…</div></div>
+      <div class="ak-row"><div class="ak-n">2</div><div class="ak-t">we <strong>had our developers remove</strong> the 'cancel order' button…</div></div>
+      <div class="ak-row"><div class="ak-n">3</div><div class="ak-t">we <strong>got the influencers to promote</strong> our debt-repayment plan…</div></div>
+      <div class="ak-row"><div class="ak-n">4</div><div class="ak-t">It <strong>is thought</strong> that this strategy will…</div></div>
+      <div class="ak-row"><div class="ak-n">5</div><div class="ak-t">…will <strong>have the market forget</strong> our ethical record…</div></div>
+      <div class="ak-row"><div class="ak-n">6</div><div class="ak-t">how can we <strong>get the consumers to believe</strong> that we are on their side?</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ STAGE 4 ══════════════════════ -->
+<div class="stage" id="stage-3">
+  <div class="sh"><div class="sh-title">The Ethics Panel</div></div>
+
+  <div class="scenario-box">
+    <div class="case-label">⚖ The Glow-Shop Case</div>
+    <div class="case-title">The App on Trial</div>
+    <div class="case-body">Glow-Shop has caused a <strong>200% increase in teenage debt</strong>. If the CEO and Ad Architect persuade the jury, the app expands globally. If the Teenager proves it is a 'digital cage', the app is banned and the company pays massive compensation.</div>
+  </div>
+
+  <div class="task-box">
+    <div class="task-icon">TASK</div>
+    <div class="task-text">
+      Prepare <strong>2–3 arguments</strong> using your role card. You must use at least one <strong>Reporting Passive</strong> and one <strong>Causative</strong>.
+      <em>e.g. "It is widely believed that…" &nbsp;/&nbsp; "They get teenagers to feel…" &nbsp;/&nbsp; "We have the algorithm map…"</em>
+    </div>
+  </div>
+
+  <div class="panel-grid">
+
+    <!-- LEFT: WHEEL + ROLE CARD -->
+    <div class="wheel-col">
+      <div class="wheel-lbl">Spin to assign role</div>
+      <div class="wheel-wrap">
+        <div class="w-ptr"></div>
+        <canvas id="wc" width="260" height="260"></canvas>
+      </div>
+      <button class="spin-btn" id="spinBtn" onclick="spinWheel()">SPIN</button>
+
+      <div class="role-card-area" id="roleCardArea">
+        <!-- CEO -->
+        <div class="role-card-inner" id="rc-0">
+          <div class="rc-label">Role Card</div>
+          <div class="rc-name" style="color:#1850b8">Tech CEO</div>
+          <div class="rc-row">
+            <div class="rc-key" style="color:#1850b8">Persona</div>
+            <div class="rc-val">Sharp, cold, data-driven. Every word is calculated.</div>
+          </div>
+          <div class="rc-row">
+            <div class="rc-key" style="color:#1850b8">Focus</div>
+            <div class="rc-val">Efficiency. The old world was slow. The teenager is just afraid of the future.</div>
+          </div>
+          <div class="rc-row">
+            <div class="rc-key" style="color:#1850b8">Use this</div>
+            <div class="rc-tag">It is widely acknowledged that…</div>
+            <div class="rc-tag" style="margin-left:0;margin-top:4px;display:block">We have our platform optimise…</div>
+          </div>
+        </div>
+        <!-- TEENAGER -->
+        <div class="role-card-inner" id="rc-1">
+          <div class="rc-label">Role Card</div>
+          <div class="rc-name" style="color:#166534">Teenager</div>
+          <div class="rc-row">
+            <div class="rc-key" style="color:#166534">Persona</div>
+            <div class="rc-val">Creative and articulate, but feeling oppressed by the system.</div>
+          </div>
+          <div class="rc-row">
+            <div class="rc-key" style="color:#166534">Focus</div>
+            <div class="rc-val">Freedom. The CEO sees you as data, not a person. Use the Glow-Up leak as evidence.</div>
+          </div>
+          <div class="rc-row">
+            <div class="rc-key" style="color:#166534">Use this</div>
+            <div class="rc-tag">It has been proven that…</div>
+            <div class="rc-tag" style="margin-left:0;margin-top:4px;display:block">They get us to feel…</div>
+          </div>
+        </div>
+        <!-- AD ARCHITECT -->
+        <div class="role-card-inner" id="rc-2">
+          <div class="rc-label">Role Card</div>
+          <div class="rc-name" style="color:#c2400c">Ad Architect</div>
+          <div class="rc-row">
+            <div class="rc-key" style="color:#c2400c">Persona</div>
+            <div class="rc-val">Charismatic, slick. Views advertising as high art.</div>
+          </div>
+          <div class="rc-row">
+            <div class="rc-key" style="color:#c2400c">Focus</div>
+            <div class="rc-val">Identity. Without your ads, the teenager would have no style or community. "We sell dreams."</div>
+          </div>
+          <div class="rc-row">
+            <div class="rc-key" style="color:#c2400c">Use this</div>
+            <div class="rc-tag">It is considered essential that…</div>
+            <div class="rc-tag" style="margin-left:0;margin-top:4px;display:block">We have the culture reflect…</div>
+          </div>
+        </div>
+        <!-- JURY -->
+        <div class="role-card-inner" id="rc-3">
+          <div class="rc-label">Role Card</div>
+          <div class="rc-name" style="color:#92400e">Jury</div>
+          <div class="rc-row">
+            <div class="rc-key" style="color:#92400e">Your role</div>
+            <div class="rc-val">You are a Language Detective and a Decision Maker. Listen carefully and score each speaker on the right.</div>
+          </div>
+          <div class="rc-row">
+            <div class="rc-key" style="color:#92400e">Look for</div>
+            <div class="rc-val">Reporting Passives, Causatives, and the strength of their argument.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: JURY PANEL -->
+    <div class="jury-panel">
+      <div class="jp-title">Jury Evaluation Criteria</div>
+
+      <div class="spk-label">Currently evaluating</div>
+      <div class="spk-row">
+        <button class="spk-btn sel" onclick="setSpeaker(0,this)">Tech CEO</button>
+        <button class="spk-btn" onclick="setSpeaker(1,this)">Teenager</button>
+        <button class="spk-btn" onclick="setSpeaker(2,this)">Ad Architect</button>
+      </div>
+
+      <div class="criterion">
+        <div class="cr-lbl">Clarity &amp; Content</div>
+        <div class="cr-q">Did the speaker explain their complex viewpoint and the dilemma clearly?</div>
+        <div class="sc-dots" id="crit-0-0">
+          <div class="dot" onclick="setScore(this,'crit-0-0',1)"></div>
+          <div class="dot" onclick="setScore(this,'crit-0-0',2)"></div>
+          <div class="dot" onclick="setScore(this,'crit-0-0',3)"></div>
+          <div class="dot" onclick="setScore(this,'crit-0-0',4)"></div>
+          <div class="dot" onclick="setScore(this,'crit-0-0',5)"></div>
+        </div>
+      </div>
+
+      <div class="criterion">
+        <div class="cr-lbl">Persuasiveness</div>
+        <div class="cr-q">Were the arguments logical and the tactics effective?</div>
+        <div class="sc-dots" id="crit-0-1">
+          <div class="dot" onclick="setScore(this,'crit-0-1',1)"></div>
+          <div class="dot" onclick="setScore(this,'crit-0-1',2)"></div>
+          <div class="dot" onclick="setScore(this,'crit-0-1',3)"></div>
+          <div class="dot" onclick="setScore(this,'crit-0-1',4)"></div>
+          <div class="dot" onclick="setScore(this,'crit-0-1',5)"></div>
+        </div>
+      </div>
+
+      <div class="criterion">
+        <div class="cr-lbl">Target Language</div>
+        <div class="cr-q">Did they use Reporting Passives (e.g. <em>It is claimed that…</em>) and Causatives (e.g. <em>get someone to do</em>)?</div>
+        <div class="sc-dots" id="crit-0-2">
+          <div class="dot" onclick="setScore(this,'crit-0-2',1)"></div>
+          <div class="dot" onclick="setScore(this,'crit-0-2',2)"></div>
+          <div class="dot" onclick="setScore(this,'crit-0-2',3)"></div>
+          <div class="dot" onclick="setScore(this,'crit-0-2',4)"></div>
+          <div class="dot" onclick="setScore(this,'crit-0-2',5)"></div>
+        </div>
+      </div>
+
+      <div class="verdict-zone">
+        <div class="v-lbl">Score Totals</div>
+        <div class="score-totals">
+          <div class="stotal" id="st-0"><span class="st-name" style="color:#1850b8">Tech CEO</span><span class="st-score" id="ts-0">0</span><span class="st-max">/15</span></div>
+          <div class="stotal" id="st-1"><span class="st-name" style="color:#166534">Teenager</span><span class="st-score" id="ts-1">0</span><span class="st-max">/15</span></div>
+          <div class="stotal" id="st-2"><span class="st-name" style="color:#c2400c">Ad Architect</span><span class="st-score" id="ts-2">0</span><span class="st-max">/15</span></div>
+        </div>
+        <button class="verdict-calc-btn" onclick="calcVerdict()">Calculate Verdict</button>
+        <div id="vout"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ── STAGE / TIMER ── */
+const DUR=[300,300,600,900];
+let cur=0,tLeft=300,running=false,ival=null;
+function goStage(n){
+  document.querySelectorAll('.stage').forEach((s,i)=>s.classList.toggle('active',i===n));
+  document.querySelectorAll('.snav-btn').forEach((b,i)=>b.classList.toggle('active',i===n));
+  cur=n;tLeft=DUR[n];stopTimer();updDisp();
+}
+function updDisp(){
+  const m=String(Math.floor(tLeft/60)).padStart(2,'0'),s=String(tLeft%60).padStart(2,'0');
+  const el=document.getElementById('tDisp');
+  el.textContent=`${m}:${s}`;
+  el.classList.toggle('warn',tLeft<=30);
+}
+function toggleTimer(){running?stopTimer():startTimer();}
+function startTimer(){
+  if(tLeft<=0)return;
+  running=true;document.getElementById('tBtn').textContent='⏸';
+  ival=setInterval(()=>{if(tLeft>0){tLeft--;updDisp();}else stopTimer();},1000);
+}
+function stopTimer(){running=false;clearInterval(ival);document.getElementById('tBtn').textContent='▶';}
+function resetTimer(){stopTimer();tLeft=DUR[cur];updDisp();}
+
+/* ── PRACTICE ── */
+const CORRECT={
+  g1:['is claimed','is said','is reported','is argued','is alleged'],
+  g2:['had our developers remove','had the developers remove'],
+  g3:['got the influencers to promote'],
+  g4:['is thought','is believed','is considered'],
+  g5:['have the market forget'],
+  g6:['get the consumers to believe']
+};
+function checkAns(){
+  Object.keys(CORRECT).forEach(id=>{
+    const inp=document.getElementById(id);
+    const v=inp.value.trim().toLowerCase();
+    if(!v)return;
+    const ok=CORRECT[id].some(a=>v.includes(a)||a.includes(v));
+    inp.classList.remove('ok','no');
+    inp.classList.add(ok?'ok':'no');
+  });
+}
+function showKey(){document.getElementById('ak').classList.toggle('show');}
+
+/* ── WHEEL ── */
+const ROLES=['Tech CEO','Teenager','Ad Architect','Jury'];
+const FILLS=['#dbeafe','#dcfce7','#ffe4d4','#fef3c7'];
+const STROKES=['#1850b8','#166534','#c2400c','#92400e'];
+const canvas=document.getElementById('wc');
+const ctx=canvas.getContext('2d');
+let wAngle=0,spinning=false;
+
+function drawWheel(rot){
+  const cx=130,cy=130,r=122,sl=(2*Math.PI)/ROLES.length;
+  ctx.clearRect(0,0,260,260);
+  ROLES.forEach((role,i)=>{
+    const s=rot+i*sl-Math.PI/2,e=s+sl;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,s,e);ctx.closePath();
+    ctx.fillStyle=FILLS[i];ctx.fill();
+    ctx.strokeStyle='#f5f3ee';ctx.lineWidth=3;ctx.stroke();
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(s+sl/2);
+    ctx.textAlign='right';
+    ctx.fillStyle=STROKES[i];
+    ctx.font='bold 14px "Bebas Neue",sans-serif';
+    ctx.fillText(role,r-12,5);
+    ctx.restore();
+  });
+  ctx.beginPath();ctx.arc(cx,cy,20,0,2*Math.PI);
+  ctx.fillStyle='#f5f3ee';ctx.fill();
+  ctx.strokeStyle=STROKES[0];ctx.lineWidth=1.5;ctx.stroke();
+}
+drawWheel(wAngle);
+
+function spinWheel(){
+  if(spinning)return;
+  spinning=true;
+  document.getElementById('spinBtn').disabled=true;
+  document.querySelectorAll('.role-card-inner').forEach(c=>c.classList.remove('visible'));
+  const extra=(4+Math.floor(Math.random()*4))*2*Math.PI;
+  const stop=Math.random()*2*Math.PI;
+  const target=wAngle+extra+stop;
+  const dur=3000+Math.random()*800;
+  const t0=performance.now(),a0=wAngle;
+  const ease=t=>1-Math.pow(1-t,3);
+  (function frame(now){
+    const t=Math.min((now-t0)/dur,1);
+    wAngle=a0+(target-a0)*ease(t);
+    drawWheel(wAngle);
+    if(t<1){requestAnimationFrame(frame);}
+    else{
+      wAngle=target%(2*Math.PI);drawWheel(wAngle);
+      spinning=false;document.getElementById('spinBtn').disabled=false;
+      const sl=(2*Math.PI)/ROLES.length;
+      const norm=((-(wAngle)%(2*Math.PI))+(2*Math.PI))%(2*Math.PI);
+      const idx=Math.floor(norm/sl)%ROLES.length;
+      document.getElementById('rc-'+idx).classList.add('visible');
+    }
+  })(performance.now());
+}
+
+/* ── JURY SCORES (per speaker) ── */
+// scores[speaker][criterion] = value
+const scores=[[0,0,0],[0,0,0],[0,0,0]];
+let curSpk=0;
+const SPKIDS=['crit-0-0','crit-0-1','crit-0-2'];
+
+function renderScores(){
+  SPKIDS.forEach((id,ci)=>{
+    const dots=document.querySelectorAll(`#${id} .dot`);
+    dots.forEach((d,di)=>d.classList.toggle('lit',di<scores[curSpk][ci]));
+  });
+}
+
+function setSpeaker(n,btn){
+  curSpk=n;
+  document.querySelectorAll('.spk-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  renderScores();
+}
+
+function setScore(el,rowId,score){
+  const ci=SPKIDS.indexOf(rowId);
+  scores[curSpk][ci]=score;
+  renderScores();
+  updateTotals();
+}
+
+function updateTotals(){
+  scores.forEach((spk,i)=>{
+    const total=spk.reduce((a,b)=>a+b,0);
+    const el=document.getElementById('ts-'+i);
+    if(el) el.textContent=total;
+  });
+}
+
+const OUTCOMES={
+  ban:[
+    "The Glow-Shop app is immediately suspended. Regulators launch a full investigation into Algorithm Update #402.",
+    "Julian Thorne publishes his analysis. The internal memo goes viral. The CEO resigns within 48 hours.",
+    "A landmark ruling: platforms must disclose when algorithms are designed to exploit FOMO. The teenager's testimony becomes a case study."
+  ],
+  exp:[
+    "Glow-Shop expands to 34 new markets. Teen debt statistics quietly disappear from the public dashboard.",
+    "The CEO announces record profits. The 'lifestyle debt' campaign wins an industry award for innovation.",
+    "The Ad Architect's strategy is licensed to five competing platforms. The teenager's account is shadow-banned."
+  ]
+};
+function calcVerdict(){
+  const teenTotal=scores[1].reduce((a,b)=>a+b,0);
+  const oppTotal=Math.round((scores[0].reduce((a,b)=>a+b,0)+scores[2].reduce((a,b)=>a+b,0))/2);
+  const ban=teenTotal>oppTotal;
+  const type=ban?'ban':'exp';
+  const txt=OUTCOMES[type][Math.floor(Math.random()*3)];
+  const out=document.getElementById('vout');
+  out.style.cssText='margin-top:12px;padding:11px 14px;border-radius:6px;font-size:12.5px;line-height:1.65;animation:fi .3s ease';
+  out.style.background=ban?'rgba(185,28,28,.07)':'rgba(22,101,52,.07)';
+  out.style.border=ban?'1px solid rgba(185,28,28,.25)':'1px solid rgba(22,101,52,.25)';
+  out.style.color=ban?'#7f1d1d':'#14532d';
+  const verdict=ban?'🚫 BAN THE APP':'🌐 EXPAND GLOBALLY';
+  const scoreNote=ban
+    ?`Teenager (${teenTotal}) outscored opposition avg. (${oppTotal}).`
+    :`Opposition avg. (${oppTotal}) outscored Teenager (${teenTotal}).`;
+  out.innerHTML=`<strong style="display:block;margin-bottom:5px;font-size:14px">${verdict}</strong><span style="display:block;font-family:'DM Mono',monospace;font-size:10px;margin-bottom:6px;opacity:.7">${scoreNote}</span>${txt}`;
+}
+
+/* flash timer */
+(function(){
+  let h=1,m=47,s=23;
+  setInterval(()=>{
+    if(--s<0){s=59;if(--m<0){m=59;if(--h<0){h=1;m=59;s=59;}}}
+    const fh=document.getElementById('fh'),fm=document.getElementById('fm'),fs=document.getElementById('fs');
+    if(fh)fh.textContent=String(h).padStart(2,'0');
+    if(fm)fm.textContent=String(m).padStart(2,'0');
+    if(fs)fs.textContent=String(s).padStart(2,'0');
+  },1000);
+})();
+</script>
+</body>
+</html>
